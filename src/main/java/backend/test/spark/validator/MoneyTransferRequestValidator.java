@@ -16,11 +16,11 @@ public final class MoneyTransferRequestValidator {
             throw new ValidationException("One of accounts ids is missing");
         }
         if (moneyTransferRequest.getFrom().equals(moneyTransferRequest.getTo())) {
-            throw new ValidationException("Charge operation under one account. Stop processing.");
+            throw new ValidationException("Charge operation under one account. Stop processing");
         }
         if (moneyTransferRequest.getAmount() <= 0) {
             throw new ValidationException(
-                    format("Not possible to charge %f", moneyTransferRequest.getAmount())
+                    format("Not possible to charge negative value: %f", moneyTransferRequest.getAmount())
             );
         }
     }

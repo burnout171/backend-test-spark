@@ -14,8 +14,10 @@ public class Application {
         JsonUtils jsonUtils = new JsonUtils();
         TransferMoneyOperation transferMoneyOperation = new TransferMoneyOperation(jsonUtils, accountDao);
         AccountController accountController = new AccountController(transferMoneyOperation);
-
-        post("/accounts/transfer", accountController.transferMoney());
+        Application.init(accountController);
     }
 
+    public static void init(AccountController controller) {
+        post("/accounts/transfer", controller.transferMoney());
+    }
 }
