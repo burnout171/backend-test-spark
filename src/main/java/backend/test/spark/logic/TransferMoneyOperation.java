@@ -72,7 +72,7 @@ public class TransferMoneyOperation {
         return moneyTransferRequest;
     }
 
-    private void doTransfer(Account fromAccount, Account toAccount, Double amount) {
+    private synchronized void doTransfer(Account fromAccount, Account toAccount, Double amount) {
         if (fromAccount.getBalance().compareTo(amount) < 0)
             throw new ValidationException("Not enough money!");
         else {
