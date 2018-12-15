@@ -2,35 +2,43 @@ package backend.test.spark.model;
 
 
 public class MoneyTransferRequest {
-    private String from;
-    private String to;
-    private long amount;
+    private Long from;
+    private Long to;
+    private Double amount;
 
-
-    public String getFrom() {
+    public Long getFrom() {
         return from;
     }
 
-    public MoneyTransferRequest setFrom(String from) {
+    public MoneyTransferRequest setFrom(Long from) {
         this.from = from;
         return this;
     }
 
-    public String getTo() {
+    public Long getTo() {
         return to;
     }
 
-    public MoneyTransferRequest setTo(String to) {
+    public MoneyTransferRequest setTo(Long to) {
         this.to = to;
         return this;
     }
 
-    public long getAmount() {
+    public Double getAmount() {
         return amount;
     }
 
-    public MoneyTransferRequest setAmount(long amount) {
+    public MoneyTransferRequest setAmount(Double amount) {
         this.amount = amount;
         return this;
+    }
+
+    @Override
+    public String toString() {
+        return "MoneyTransferRequest{" +
+                "from=" + from +
+                ", to=" + to +
+                ", amount=" + amount +
+                '}';
     }
 }
