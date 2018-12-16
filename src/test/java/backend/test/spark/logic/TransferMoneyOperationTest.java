@@ -19,15 +19,12 @@ import spark.Spark;
 import java.util.List;
 import java.util.Optional;
 
+import static backend.test.spark.DataCreator.*;
 import static java.lang.String.format;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class TransferMoneyOperationTest {
-
-    private static final double AMOUNT = 100D;
-    private static final long FROM_ID = 1L;
-    private static final long TO_ID = 2L;
 
     private final JsonUtils jsonUtils = new JsonUtils();
     private final ApiClient apiClient = new ApiClient("http://localhost:4567");
@@ -52,7 +49,7 @@ class TransferMoneyOperationTest {
 
     @Test
     void successfulTransfer() {
-        MoneyTransferRequest givenMoneyTransferRequest = givenMoneyTransferRequest(AMOUNT);
+        MoneyTransferRequest givenMoneyTransferRequest = givenMoneyTransferRequest();
         Account fromAccount = givenAccount(FROM_ID, AMOUNT);
         Account toAccount = givenAccount(TO_ID, AMOUNT);
         when(accountDao.getAccount(FROM_ID)).thenReturn(Optional.of(fromAccount));
@@ -77,7 +74,7 @@ class TransferMoneyOperationTest {
 
     @Test
     void notEnoughMoney() {
-        MoneyTransferRequest givenMoneyTransferRequest = givenMoneyTransferRequest(AMOUNT);
+        MoneyTransferRequest givenMoneyTransferRequest = givenMoneyTransferRequest();
         Account fromAccount = givenAccount(FROM_ID, AMOUNT - 1);
         Account toAccount = givenAccount(TO_ID, AMOUNT);
         when(accountDao.getAccount(FROM_ID)).thenReturn(Optional.of(fromAccount));
@@ -115,7 +112,7 @@ class TransferMoneyOperationTest {
 
     @Test
     void transferWithinSameAccount() {
-        MoneyTransferRequest givenMoneyTransferRequest = givenMoneyTransferRequest(AMOUNT);
+        MoneyTransferRequest givenMoneyTransferRequest = givenMoneyTransferRequest();
         givenMoneyTransferRequest.setTo(FROM_ID);
 
         String actualRawResponse = apiClient.request(
@@ -131,7 +128,7 @@ class TransferMoneyOperationTest {
 
     @Test
     void fromAccountNotFound() {
-        MoneyTransferRequest givenMoneyTransferRequest = givenMoneyTransferRequest(AMOUNT);
+        MoneyTransferRequest givenMoneyTransferRequest = givenMoneyTransferRequest();
         Account toAccount = givenAccount(TO_ID, AMOUNT);
         when(accountDao.getAccount(FROM_ID)).thenReturn(Optional.empty());
         when(accountDao.getAccount(TO_ID)).thenReturn(Optional.of(toAccount));
@@ -150,7 +147,7 @@ class TransferMoneyOperationTest {
 
     @Test
     void toAccountNotFound() {
-        MoneyTransferRequest givenMoneyTransferRequest = givenMoneyTransferRequest(AMOUNT);
+        MoneyTransferRequest givenMoneyTransferRequest = givenMoneyTransferRequest();
         Account fromAccount = givenAccount(FROM_ID, AMOUNT);
         when(accountDao.getAccount(FROM_ID)).thenReturn(Optional.of(fromAccount));
         when(accountDao.getAccount(TO_ID)).thenReturn(Optional.empty());
@@ -164,17 +161,5 @@ class TransferMoneyOperationTest {
                 () -> assertEquals(format("Account %d not found", TO_ID), actualResponse.getMessage())
         );
         verify(accountDao, never()).update(any());
-    }
-
-    private MoneyTransferRequest givenMoneyTransferRequest(double AMOUNT) {
-        MoneyTransferRequest givenMoneyTransferRequest = new MoneyTransferRequest();
-        givenMoneyTransferRequest.setFrom(FROM_ID);
-        givenMoneyTransferRequest.setTo(TO_ID);
-        givenMoneyTransferRequest.setAmount(AMOUNT);
-        return givenMoneyTransferRequest;
-    }
-
-    private Account givenAccount(long id, double balance) {
-        return new Account().setId(id).setBalance(balance);
     }
 }
