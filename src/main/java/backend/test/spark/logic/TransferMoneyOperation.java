@@ -1,6 +1,6 @@
 package backend.test.spark.logic;
 
-import backend.test.spark.dao.AccountDao;
+import backend.test.spark.dao.AccountDaoAdapter;
 import backend.test.spark.exception.BusinessException;
 import backend.test.spark.exception.ValidationException;
 import backend.test.spark.model.Account;
@@ -13,18 +13,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spark.Request;
 
-import static java.lang.String.format;
-
 public class TransferMoneyOperation {
 
     private static final Logger log = LoggerFactory.getLogger(TransferMoneyOperation.class);
 
     private final JsonUtils jsonUtils;
-    private final AccountDao accountDao;
+    private final AccountDaoAdapter accountDaoAdapter;
 
-    public TransferMoneyOperation(JsonUtils jsonUtils, AccountDao accountDao) {
+    public TransferMoneyOperation(JsonUtils jsonUtils, AccountDaoAdapter accountDaoAdapter) {
         this.jsonUtils = jsonUtils;
-        this.accountDao = accountDao;
+        this.accountDaoAdapter = accountDaoAdapter;
     }
 
     public String process(Request request) {
@@ -47,20 +45,8 @@ public class TransferMoneyOperation {
 
     private Response internalProcess(Request request) {
         MoneyTransferRequest moneyTransferRequest = bodyToObject(request);
-        long fromId = moneyTransferRequest.getFrom();
-        long toId = moneyTransferRequest.getTo();
-        Account fromAccount = accountDao.getAccount(fromId)
-                .orElseThrow(
-                        () -> new BusinessException(
-                                format("From account %d not found", fromId)
-                        )
-                );
-        Account toAccount = accountDao.getAccount(toId)
-                .orElseThrow(
-                        () -> new BusinessException(
-                                format("To account %d not found", toId)
-                        )
-                );
+        Account fromAccount = accountDaoAdapter.getAccount(moneyTransferRequest.getFrom());
+        Account toAccount = accountDaoAdapter.getAccount(moneyTransferRequest.getTo());
         doTransfer(fromAccount, toAccount, moneyTransferRequest.getAmount());
         return new Response().setSuccess(true).setMessage("done");
     }
@@ -78,8 +64,8 @@ public class TransferMoneyOperation {
         else {
             fromAccount.setBalance( fromAccount.getBalance() - amount );
             toAccount.setBalance( toAccount.getBalance() + amount);
-            accountDao.save(fromAccount);
-            accountDao.save(toAccount);
+            accountDaoAdapter.update(fromAccount);
+            accountDaoAdapter.update(toAccount);
         }
     }
 }

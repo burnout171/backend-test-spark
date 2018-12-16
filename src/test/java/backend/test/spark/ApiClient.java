@@ -9,6 +9,8 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 
+import static java.util.Objects.nonNull;
+
 public class ApiClient {
 
     private final String server;
@@ -23,7 +25,7 @@ public class ApiClient {
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod(method);
             connection.setRequestProperty("Content-Type", "application/json");
-            if (requestBody != null) {
+            if (nonNull(requestBody)) {
                 connection.setDoOutput(true);
                 try (OutputStream os = connection.getOutputStream()) {
                     os.write(requestBody.getBytes(StandardCharsets.UTF_8));

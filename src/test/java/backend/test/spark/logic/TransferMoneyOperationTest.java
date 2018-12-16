@@ -4,6 +4,7 @@ import backend.test.spark.ApiClient;
 import backend.test.spark.Application;
 import backend.test.spark.controller.AccountController;
 import backend.test.spark.dao.AccountDao;
+import backend.test.spark.dao.AccountDaoAdapter;
 import backend.test.spark.model.Account;
 import backend.test.spark.model.MoneyTransferRequest;
 import backend.test.spark.model.Response;
@@ -34,7 +35,8 @@ class TransferMoneyOperationTest {
     @BeforeEach
     void init() {
         accountDao = mock(AccountDao.class);
-        TransferMoneyOperation transferMoneyOperation = new TransferMoneyOperation(jsonUtils, accountDao);
+        AccountDaoAdapter accountDaoAdapter = new AccountDaoAdapter(accountDao);
+        TransferMoneyOperation transferMoneyOperation = new TransferMoneyOperation(jsonUtils, accountDaoAdapter);
         AccountController accountController = new AccountController(transferMoneyOperation);
         Application.init(accountController);
         Spark.awaitInitialization();
@@ -59,7 +61,7 @@ class TransferMoneyOperationTest {
         Response actualResponse = jsonUtils.fromJson(actualRawResponse, Response.class);
 
         assertTrue(actualResponse.getSuccess());
-        verify(accountDao, times(2)).save(
+        verify(accountDao, times(2)).update(
                 argThat(account -> {
                     if (FROM_ID == account.getId()) {
                         assertEquals(Double.valueOf(0), account.getBalance());
@@ -89,7 +91,7 @@ class TransferMoneyOperationTest {
                 () -> assertFalse(actualResponse.getSuccess()),
                 () -> assertEquals("Not enough money!", actualResponse.getMessage())
         );
-        verify(accountDao, never()).save(any());
+        verify(accountDao, never()).update(any());
     }
 
     @Test
@@ -108,7 +110,7 @@ class TransferMoneyOperationTest {
                 () -> assertFalse(actualResponse.getSuccess()),
                 () -> assertEquals(format("Not possible to charge negative value: %f", -AMOUNT), actualResponse.getMessage())
         );
-        verify(accountDao, never()).save(any());
+        verify(accountDao, never()).update(any());
     }
 
     @Test
@@ -124,7 +126,7 @@ class TransferMoneyOperationTest {
                 () -> assertFalse(actualResponse.getSuccess()),
                 () -> assertEquals("Charge operation under one account. Stop processing", actualResponse.getMessage())
         );
-        verify(accountDao, never()).save(any());
+        verify(accountDao, never()).update(any());
     }
 
     @Test
@@ -140,9 +142,9 @@ class TransferMoneyOperationTest {
 
         assertAll(
                 () -> assertFalse(actualResponse.getSuccess()),
-                () -> assertEquals(format("From account %d not found", FROM_ID), actualResponse.getMessage())
+                () -> assertEquals(format("Account %d not found", FROM_ID), actualResponse.getMessage())
         );
-        verify(accountDao, never()).save(any());
+        verify(accountDao, never()).update(any());
     }
 
 
@@ -159,9 +161,9 @@ class TransferMoneyOperationTest {
 
         assertAll(
                 () -> assertFalse(actualResponse.getSuccess()),
-                () -> assertEquals(format("To account %d not found", TO_ID), actualResponse.getMessage())
+                () -> assertEquals(format("Account %d not found", TO_ID), actualResponse.getMessage())
         );
-        verify(accountDao, never()).save(any());
+        verify(accountDao, never()).update(any());
     }
 
     private MoneyTransferRequest givenMoneyTransferRequest(double AMOUNT) {
