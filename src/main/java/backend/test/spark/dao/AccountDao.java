@@ -20,11 +20,11 @@ public class AccountDao {
         this.connectionPool = connectionPool;
     }
 
-    public Optional<Account> getAccount(Long id) {
-        String query = "SELECT * FROM ACCOUNTS WHERE ID = " + id;
+    public Optional<Account> getAccount(long id) {
+        String query = format("SELECT * FROM ACCOUNTS WHERE ID = %d FOR UPDATE", id);
         try (Connection connection = connectionPool.getConnection()) {
-            try(Statement statement = connection.createStatement()) {
-                try(ResultSet rs = statement.executeQuery(query)) {
+            try (Statement statement = connection.createStatement()) {
+                try (ResultSet rs = statement.executeQuery(query)) {
                     if (!rs.next()) {
                         return Optional.empty();
                     }
@@ -39,12 +39,14 @@ public class AccountDao {
         }
     }
 
-    public void update(Account account) {
-        String query =
-                format("UPDATE ACCOUNTS SET BALANCE = %s WHERE ID = %d", account.getBalance().toString(), account.getId());
+    public void update(Account... accounts) {
+        String query = "UPDATE ACCOUNTS SET BALANCE = %s WHERE ID = %d";
         try (Connection connection = connectionPool.getConnection()) {
-            try(Statement statement = connection.createStatement()) {
-                statement.executeUpdate(query);
+            try (Statement statement = connection.createStatement()) {
+                for (Account account : accounts) {
+                    String queryWithParameters = format(query, account.getBalance(), account.getId());
+                    statement.executeUpdate(queryWithParameters);
+                }
             } catch (Exception e) {
                 connection.rollback();
                 throw new InternalException(e);

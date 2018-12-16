@@ -58,14 +58,12 @@ public class TransferMoneyOperation {
         return moneyTransferRequest;
     }
 
-    private synchronized void doTransfer(Account fromAccount, Account toAccount, Double amount) {
-        if (fromAccount.getBalance().compareTo(amount) < 0)
+    private void doTransfer(Account fromAccount, Account toAccount, Double amount) {
+        if (Double.compare(fromAccount.getBalance(), amount) < 0) {
             throw new ValidationException("Not enough money!");
-        else {
-            fromAccount.setBalance( fromAccount.getBalance() - amount );
-            toAccount.setBalance( toAccount.getBalance() + amount);
-            accountDaoAdapter.update(fromAccount);
-            accountDaoAdapter.update(toAccount);
         }
+        fromAccount.setBalance(fromAccount.getBalance() - amount);
+        toAccount.setBalance(toAccount.getBalance() + amount);
+        accountDaoAdapter.update(fromAccount, toAccount);
     }
 }

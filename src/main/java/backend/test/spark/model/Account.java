@@ -1,25 +1,27 @@
 package backend.test.spark.model;
 
+import com.google.common.base.MoreObjects;
+
 import java.util.Objects;
 
 public class Account {
-    private Long id;
-    private Double balance;
+    private long id;
+    private double balance;
 
-    public Long getId() {
+    public long getId() {
         return id;
     }
 
-    public Account setId(Long id) {
+    public Account setId(long id) {
         this.id = id;
         return this;
     }
 
-    public Double getBalance() {
+    public double getBalance() {
         return balance;
     }
 
-    public Account setBalance(Double balance) {
+    public Account setBalance(double balance) {
         this.balance = balance;
         return this;
     }
@@ -36,5 +38,13 @@ public class Account {
     @Override
     public int hashCode() {
         return Objects.hash(id, balance);
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+                .add("id", id)
+                .add("balance", balance)
+                .toString();
     }
 }

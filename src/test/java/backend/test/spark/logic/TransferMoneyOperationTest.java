@@ -13,8 +13,10 @@ import org.eclipse.jetty.http.HttpMethod;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import spark.Spark;
 
+import java.util.List;
 import java.util.Optional;
 
 import static java.lang.String.format;
@@ -23,7 +25,7 @@ import static org.mockito.Mockito.*;
 
 class TransferMoneyOperationTest {
 
-    private static final double AMOUNT = 100D; 
+    private static final double AMOUNT = 100D;
     private static final long FROM_ID = 1L;
     private static final long TO_ID = 2L;
 
@@ -61,17 +63,15 @@ class TransferMoneyOperationTest {
         Response actualResponse = jsonUtils.fromJson(actualRawResponse, Response.class);
 
         assertTrue(actualResponse.getSuccess());
-        verify(accountDao, times(2)).update(
-                argThat(account -> {
-                    if (FROM_ID == account.getId()) {
-                        assertEquals(Double.valueOf(0), account.getBalance());
-                    } else if (TO_ID == account.getId()) {
-                        assertEquals(Double.valueOf(AMOUNT + AMOUNT), account.getBalance());
-                    } else {
-                        return false;
-                    }
-                    return true;
-                })
+        ArgumentCaptor<Account> capture = ArgumentCaptor.forClass(Account.class);
+        verify(accountDao).update(capture.capture());
+        List<Account> accounts = capture.getAllValues();
+        assertAll(
+                () -> assertEquals(2, accounts.size()),
+                () -> assertEquals(FROM_ID, accounts.get(0).getId()),
+                () -> assertEquals(0D, accounts.get(0).getBalance()),
+                () -> assertEquals(TO_ID, accounts.get(1).getId()),
+                () -> assertEquals(AMOUNT + AMOUNT, accounts.get(1).getBalance())
         );
     }
 

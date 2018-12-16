@@ -13,7 +13,7 @@ public class AccountDaoAdapter {
         this.accountDao = accountDao;
     }
 
-    public Account getAccount(Long id) {
+    public Account getAccount(long id) {
         return accountDao.getAccount(id)
                 .orElseThrow(
                         () -> new BusinessException(
@@ -22,7 +22,7 @@ public class AccountDaoAdapter {
                 );
     }
 
-    public void update(Account account) {
-        accountDao.update(account);
+    public void update(Account... accounts) {
+        accountDao.update(accounts);
     }
 }
