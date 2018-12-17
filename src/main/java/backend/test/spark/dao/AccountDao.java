@@ -47,6 +47,7 @@ public class AccountDao {
     public void update(Account... accounts) {
         String query = "UPDATE ACCOUNTS SET BALANCE = %s WHERE ID = %d";
         try (Connection connection = connectionPool.getConnection()) {
+            connection.setAutoCommit(false);
             try (Statement statement = connection.createStatement()) {
                 for (Account account : accounts) {
                     String queryWithParameters = format(query, account.getBalance(), account.getId());
