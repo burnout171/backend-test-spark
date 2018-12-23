@@ -7,12 +7,10 @@ import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.Optional;
-
-import static java.lang.String.format;
 
 public class AccountDao {
 
@@ -31,10 +29,11 @@ public class AccountDao {
     }
 
     public Optional<Account> getAccount(Connection connection, long id) throws SQLException {
-        String query = format("SELECT * FROM ACCOUNTS WHERE ID = %d FOR UPDATE", id);
+        String query = "SELECT * FROM ACCOUNTS WHERE ID = ? FOR UPDATE";
         log.debug("getAccount with query = {}", query);
-        try (Statement statement = connection.createStatement()) {
-            try (ResultSet rs = statement.executeQuery(query)) {
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setLong(1, id);
+            try (ResultSet rs = statement.executeQuery()) {
                 if (!rs.next()) {
                     return Optional.empty();
                 }
@@ -47,12 +46,12 @@ public class AccountDao {
     }
 
     public void update(Connection connection, Account... accounts) throws SQLException {
-        String query = "UPDATE ACCOUNTS SET BALANCE = %s WHERE ID = %d";
-        try (Statement statement = connection.createStatement()) {
+        String query = "UPDATE ACCOUNTS SET BALANCE = ? WHERE ID = ?";
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
             for (Account account : accounts) {
-                String queryWithParameters = format(query, account.getBalance(), account.getId());
-                log.debug("update with query = {}", queryWithParameters);
-                statement.executeUpdate(queryWithParameters);
+                statement.setString(1, account.getBalance().toString());
+                statement.setLong(2, account.getId());
+                statement.executeUpdate();
             }
         } catch (Exception e) {
             connection.rollback();
