@@ -2,6 +2,7 @@ package backend.test.spark.logic;
 
 import backend.test.spark.dao.AccountDaoAdapter;
 import backend.test.spark.exception.BusinessException;
+import backend.test.spark.exception.InternalException;
 import backend.test.spark.exception.ValidationException;
 import backend.test.spark.model.Account;
 import backend.test.spark.model.MoneyTransferRequest;
@@ -12,6 +13,9 @@ import backend.test.spark.validator.RequestValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spark.Request;
+
+import java.sql.Connection;
+import java.sql.SQLException;
 
 public class TransferMoneyOperation {
 
@@ -45,9 +49,14 @@ public class TransferMoneyOperation {
 
     private Response internalProcess(Request request) {
         MoneyTransferRequest moneyTransferRequest = bodyToObject(request);
-        Account fromAccount = accountDaoAdapter.getAccount(moneyTransferRequest.getFrom());
-        Account toAccount = accountDaoAdapter.getAccount(moneyTransferRequest.getTo());
-        doTransfer(fromAccount, toAccount, moneyTransferRequest.getAmount());
+        try (Connection connection = accountDaoAdapter.getConnection()) {
+            Account fromAccount = accountDaoAdapter.getAccount(connection, moneyTransferRequest.getFrom());
+            Account toAccount = accountDaoAdapter.getAccount(connection, moneyTransferRequest.getTo());
+            doTransfer(connection, fromAccount, toAccount, moneyTransferRequest.getAmount());
+            connection.commit();
+        } catch (SQLException e) {
+            throw new InternalException(e);
+        }
         return new Response().setSuccess(true).setMessage("done");
     }
 
@@ -58,12 +67,13 @@ public class TransferMoneyOperation {
         return moneyTransferRequest;
     }
 
-    private void doTransfer(Account fromAccount, Account toAccount, Double amount) {
+    private void doTransfer(Connection connection, Account fromAccount, Account toAccount, Double amount)
+            throws SQLException {
         if (Double.compare(fromAccount.getBalance(), amount) < 0) {
             throw new ValidationException("Not enough money!");
         }
         fromAccount.setBalance(fromAccount.getBalance() - amount);
         toAccount.setBalance(toAccount.getBalance() + amount);
-        accountDaoAdapter.update(fromAccount, toAccount);
+        accountDaoAdapter.update(connection, fromAccount, toAccount);
     }
 }

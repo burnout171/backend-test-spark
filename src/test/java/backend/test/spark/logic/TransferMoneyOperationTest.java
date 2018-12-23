@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import spark.Spark;
 
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 
@@ -48,12 +49,12 @@ class TransferMoneyOperationTest {
     }
 
     @Test
-    void successfulTransfer() {
+    void successfulTransfer() throws SQLException {
         MoneyTransferRequest givenMoneyTransferRequest = givenMoneyTransferRequest();
         Account fromAccount = givenAccount(FROM_ID, AMOUNT);
         Account toAccount = givenAccount(TO_ID, AMOUNT);
-        when(accountDao.getAccount(FROM_ID)).thenReturn(Optional.of(fromAccount));
-        when(accountDao.getAccount(TO_ID)).thenReturn(Optional.of(toAccount));
+        when(accountDao.getAccount(any(), FROM_ID)).thenReturn(Optional.of(fromAccount));
+        when(accountDao.getAccount(any(), TO_ID)).thenReturn(Optional.of(toAccount));
 
         String actualRawResponse = apiClient.request(
                 HttpMethod.POST.asString(), "/accounts/transfer", jsonUtils.toJson(givenMoneyTransferRequest));
@@ -61,7 +62,7 @@ class TransferMoneyOperationTest {
 
         assertTrue(actualResponse.getSuccess());
         ArgumentCaptor<Account> capture = ArgumentCaptor.forClass(Account.class);
-        verify(accountDao).update(capture.capture());
+        verify(accountDao).update(any(), capture.capture());
         List<Account> accounts = capture.getAllValues();
         assertAll(
                 () -> assertEquals(2, accounts.size()),
@@ -73,12 +74,12 @@ class TransferMoneyOperationTest {
     }
 
     @Test
-    void notEnoughMoney() {
+    void notEnoughMoney() throws SQLException {
         MoneyTransferRequest givenMoneyTransferRequest = givenMoneyTransferRequest();
         Account fromAccount = givenAccount(FROM_ID, AMOUNT - 1);
         Account toAccount = givenAccount(TO_ID, AMOUNT);
-        when(accountDao.getAccount(FROM_ID)).thenReturn(Optional.of(fromAccount));
-        when(accountDao.getAccount(TO_ID)).thenReturn(Optional.of(toAccount));
+        when(accountDao.getAccount(any(), FROM_ID)).thenReturn(Optional.of(fromAccount));
+        when(accountDao.getAccount(any(), TO_ID)).thenReturn(Optional.of(toAccount));
 
         String actualRawResponse = apiClient.request(
                 HttpMethod.POST.asString(), "/accounts/transfer", jsonUtils.toJson(givenMoneyTransferRequest));
@@ -92,12 +93,12 @@ class TransferMoneyOperationTest {
     }
 
     @Test
-    void chargeNegativeAmount() {
+    void chargeNegativeAmount() throws SQLException {
         MoneyTransferRequest givenMoneyTransferRequest = givenMoneyTransferRequest(-AMOUNT);
         Account fromAccount = givenAccount(FROM_ID, AMOUNT);
         Account toAccount = givenAccount(TO_ID, AMOUNT);
-        when(accountDao.getAccount(FROM_ID)).thenReturn(Optional.of(fromAccount));
-        when(accountDao.getAccount(TO_ID)).thenReturn(Optional.of(toAccount));
+        when(accountDao.getAccount(any(), FROM_ID)).thenReturn(Optional.of(fromAccount));
+        when(accountDao.getAccount(any(), TO_ID)).thenReturn(Optional.of(toAccount));
 
         String actualRawResponse = apiClient.request(
                 HttpMethod.POST.asString(), "/accounts/transfer", jsonUtils.toJson(givenMoneyTransferRequest));
@@ -111,7 +112,7 @@ class TransferMoneyOperationTest {
     }
 
     @Test
-    void transferWithinSameAccount() {
+    void transferWithinSameAccount() throws SQLException {
         MoneyTransferRequest givenMoneyTransferRequest = givenMoneyTransferRequest();
         givenMoneyTransferRequest.setTo(FROM_ID);
 
@@ -123,15 +124,15 @@ class TransferMoneyOperationTest {
                 () -> assertFalse(actualResponse.getSuccess()),
                 () -> assertEquals("Charge operation under one account. Stop processing", actualResponse.getMessage())
         );
-        verify(accountDao, never()).update(any());
+        verify(accountDao, never()).update(any(), any());
     }
 
     @Test
-    void fromAccountNotFound() {
+    void fromAccountNotFound() throws SQLException {
         MoneyTransferRequest givenMoneyTransferRequest = givenMoneyTransferRequest();
         Account toAccount = givenAccount(TO_ID, AMOUNT);
-        when(accountDao.getAccount(FROM_ID)).thenReturn(Optional.empty());
-        when(accountDao.getAccount(TO_ID)).thenReturn(Optional.of(toAccount));
+        when(accountDao.getAccount(any(), FROM_ID)).thenReturn(Optional.empty());
+        when(accountDao.getAccount(any(), TO_ID)).thenReturn(Optional.of(toAccount));
 
         String actualRawResponse = apiClient.request(
                 HttpMethod.POST.asString(), "/accounts/transfer", jsonUtils.toJson(givenMoneyTransferRequest));
@@ -146,11 +147,11 @@ class TransferMoneyOperationTest {
 
 
     @Test
-    void toAccountNotFound() {
+    void toAccountNotFound() throws SQLException {
         MoneyTransferRequest givenMoneyTransferRequest = givenMoneyTransferRequest();
         Account fromAccount = givenAccount(FROM_ID, AMOUNT);
-        when(accountDao.getAccount(FROM_ID)).thenReturn(Optional.of(fromAccount));
-        when(accountDao.getAccount(TO_ID)).thenReturn(Optional.empty());
+        when(accountDao.getAccount(any(), FROM_ID)).thenReturn(Optional.of(fromAccount));
+        when(accountDao.getAccount(any(), TO_ID)).thenReturn(Optional.empty());
 
         String actualRawResponse = apiClient.request(
                 HttpMethod.POST.asString(), "/accounts/transfer", jsonUtils.toJson(givenMoneyTransferRequest));
@@ -160,6 +161,6 @@ class TransferMoneyOperationTest {
                 () -> assertFalse(actualResponse.getSuccess()),
                 () -> assertEquals(format("Account %d not found", TO_ID), actualResponse.getMessage())
         );
-        verify(accountDao, never()).update(any());
+        verify(accountDao, never()).update(any(), any());
     }
 }
