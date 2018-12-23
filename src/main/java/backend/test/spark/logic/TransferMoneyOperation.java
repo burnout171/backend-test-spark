@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spark.Request;
 
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.SQLException;
 
@@ -67,13 +68,13 @@ public class TransferMoneyOperation {
         return moneyTransferRequest;
     }
 
-    private void doTransfer(Connection connection, Account fromAccount, Account toAccount, Double amount)
+    private void doTransfer(Connection connection, Account fromAccount, Account toAccount, BigDecimal amount)
             throws SQLException {
-        if (Double.compare(fromAccount.getBalance(), amount) < 0) {
+        if (fromAccount.getBalance().compareTo(amount) < 0) {
             throw new ValidationException("Not enough money!");
         }
-        fromAccount.setBalance(fromAccount.getBalance() - amount);
-        toAccount.setBalance(toAccount.getBalance() + amount);
+        fromAccount.setBalance(fromAccount.getBalance().subtract(amount));
+        toAccount.setBalance(toAccount.getBalance().add(amount));
         accountDaoAdapter.update(connection, fromAccount, toAccount);
     }
 }

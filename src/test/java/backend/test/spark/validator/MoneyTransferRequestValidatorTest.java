@@ -5,6 +5,8 @@ import backend.test.spark.exception.ValidationException;
 import backend.test.spark.model.MoneyTransferRequest;
 import org.junit.jupiter.api.Test;
 
+import java.math.BigDecimal;
+
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class MoneyTransferRequestValidatorTest {
@@ -36,7 +38,7 @@ class MoneyTransferRequestValidatorTest {
     @Test
     void amountIsZero() {
         MoneyTransferRequest givenRequest = DataCreator.givenMoneyTransferRequest();
-        givenRequest.setAmount(0D);
+        givenRequest.setAmount(BigDecimal.ZERO);
 
         assertThrows(ValidationException.class, () -> MoneyTransferRequestValidator.validate(givenRequest));
     }

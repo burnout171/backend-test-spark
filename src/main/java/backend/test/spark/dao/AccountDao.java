@@ -5,6 +5,7 @@ import org.h2.jdbcx.JdbcConnectionPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -23,7 +24,7 @@ public class AccountDao {
         this.connectionPool = connectionPool;
     }
 
-    Connection getConnection() throws SQLException {
+    public Connection getConnection() throws SQLException {
             Connection connection = connectionPool.getConnection();
             connection.setAutoCommit(false);
             return connection;
@@ -39,7 +40,7 @@ public class AccountDao {
                 }
                 Account account = new Account()
                         .setId(rs.getLong("ID"))
-                        .setBalance(rs.getDouble("BALANCE"));
+                        .setBalance(new BigDecimal(rs.getString("BALANCE")));
                 return Optional.of(account);
             }
         }

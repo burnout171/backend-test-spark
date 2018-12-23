@@ -18,7 +18,7 @@ public final class MoneyTransferRequestValidator {
         if (moneyTransferRequest.getFrom().equals(moneyTransferRequest.getTo())) {
             throw new ValidationException("Charge operation under one account. Stop processing");
         }
-        if (moneyTransferRequest.getAmount() <= 0) {
+        if (moneyTransferRequest.getAmount().doubleValue() <= 0) {
             throw new ValidationException(
                     format("Not possible to charge negative value: %f", moneyTransferRequest.getAmount())
             );
